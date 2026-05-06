@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Center Site Selection Scorecard</title>
+  <meta name="description" content="Data Center Site Selection Scorecard" />
+  <style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100vw; min-height: 100vh; font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #0b0e14; color: #e2e8f0; }
+body { overflow-y: auto; overflow-x: hidden; }
+
+:root {
+  --bg-base: #0b0e14;
+  --bg-card: #131720;
+  --bg-card2: #1a1f2e;
+  --bg-input: #0e1118;
+  --border: #252d3d;
+  --border-bright: #2e3a52;
+  --accent1: #00d4ff;
+  --accent2: #7b5ea7;
+  --accent3: #f97316;
+  --accent-green: #22c55e;
+  --text-primary: #e2e8f0;
+  --text-secondary: #8898aa;
+  --text-muted: #4a5568;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+#app {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+/* HEADER */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 0 28px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+.header-icon {
+  font-size: 2.4rem;
+  color: var(--accent1);
+  line-height: 1;
+  filter: drop-shadow(0 0 12px rgba(0,212,255,0.5));
+}
+.header-text h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #f0f4ff;
+}
+.header-text p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* INSTRUCTIONS */
+.instructions {
+  background: rgba(0,212,255,0.06);
+  border: 1px solid rgba(0,212,255,0.18);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 0.82rem;
+  color: #8ecfdf;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.inst-icon {
+  background: rgba(0,212,255,0.15);
+  color: var(--accent1);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* LOCATIONS GRID */
+.locations-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 900px) {
+  .locations-grid { grid-template-columns: 1fr; }
+}
+@media (min-width: 901px) and (max-width: 1100px) {
+  .locations-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* LOCATION CARD */
+.location-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.location-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.location-card[data-idx="0"]::before { background: var(--accent1); }
+.location-card[data-idx="1"]::before { background: var(--accent2); }
+.location-card[data-idx="2"]::before { background: var(--accent3); }
+
+.location-card[data-idx="0"] { border-color: rgba(0,212,255,0.25); }
+.location-card[data-idx="1"] { border-color: rgba(123,94,167,0.25); }
+.location-card[data-idx="2"] { border-color: rgba(249,115,22,0.25); }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 10px;
+}
+.card-num {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.location-card[data-idx="0"] .card-num { color: var(--accent1); }
+.location-card[data-idx="1"] .card-num { color: var(--accent2); }
+.location-card[data-idx="2"] .card-num { color: var(--accent3); }
+
+.location-name-input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 7px 12px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.location-name-input::placeholder { color: var(--text-muted); font-weight: 400; }
+.location-card[data-idx="0"] .location-name-input:focus { border-color: var(--accent1); box-shadow: 0 0 0 2px rgba(0,212,255,0.12); }
+.location-card[data-idx="1"] .location-name-input:focus { border-color: var(--accent2); box-shadow: 0 0 0 2px rgba(123,94,167,0.15); }
+.location-card[data-idx="2"] .location-name-input:focus { border-color: var(--accent3); box-shadow: 0 0 0 2px rgba(249,115,22,0.12); }
+
+.total-score-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.score-value {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.location-card[data-idx="0"] .score-value { color: var(--accent1); }
+.location-card[data-idx="1"] .score-value { color: var(--accent2); }
+.location-card[data-idx="2"] .score-value { color: var(--accent3); }
+
+.score-max {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  padding-bottom: 4px;
+}
+.score-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-right: auto;
+  align-self: flex-end;
+  padding-bottom: 6px;
+}
+
+/* CRITERIA ROWS */
+.criteria-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.criterion-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.criterion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.criterion-name {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.criterion-name .inverted-badge {
+  font-size: 0.62rem;
+  background: rgba(249,115,22,0.15);
+  color: #f97316;
+  border: 1px solid rgba(249,115,22,0.3);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.criterion-weight {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.slider-val {
+  min-width: 24px;
+  text-align: right;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* SLIDERS */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--border-bright);
+  outline: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--bg-card);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+input[type=range]::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid var(--bg-card);
+}
+input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.2); }
+
+.location-card[data-idx="0"] input[type=range]::-webkit-slider-thumb { background: var(--accent1); box-shadow: 0 0 6px rgba(0,212,255,0.4); }
+.location-card[data-idx="0"] input[type=range]::-moz-range-thumb { background: var(--accent1); }
+.location-card[data-idx="1"] input[type=range]::-webkit-slider-thumb { background: var(--accent2); box-shadow: 0 0 6px rgba(123,94,167,0.4); }
+.location-card[data-idx="1"] input[type=range]::-moz-range-thumb { background: var(--accent2); }
+.location-card[data-idx="2"] input[type=range]::-webkit-slider-thumb { background: var(--accent3); box-shadow: 0 0 6px rgba(249,115,22,0.4); }
+.location-card[data-idx="2"] input[type=range]::-moz-range-thumb { background: var(--accent3); }
+
+/* SECTION TITLES */
+.section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  padding-left: 10px;
+  border-left: 3px solid var(--accent1);
+}
+
+/* CHART */
+.chart-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.chart-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.chart-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.chart-bar-label {
+  min-width: 130px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.chart-bar-track {
+  flex: 1;
+  height: 28px;
+  background: var(--bg-input);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.chart-bar-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  min-width: 2px;
+}
+.chart-bar-score {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  position: absolute;
+  right: -40px;
+  white-space: nowrap;
+}
+.chart-scale {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 130px 0 142px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.chart-legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* BREAKDOWN TABLE */
+.breakdown-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+.breakdown-table-wrap {
+  overflow-x: auto;
+}
+.breakdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.breakdown-table th {
+  padding: 8px 14px;
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.breakdown-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid rgba(37,45,61,0.5);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.breakdown-table tr:last-child td { border-bottom: none; }
+.breakdown-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+.breakdown-table td.score-cell {
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.breakdown-table th.score-th { text-align: center; }
+.breakdown-table .criterion-col { font-weight: 500; color: var(--text-secondary); }
+.breakdown-table .weight-col { color: var(--text-muted); }
+.breakdown-table .total-row td {
+  font-weight: 700;
+  color: var(--text-primary);
+  border-top: 1px solid var(--border-bright);
+  border-bottom: none;
+  font-size: 0.88rem;
+}
+.best-cell { border-radius: 4px; }
+
+/* WINNER */
+.winner-section {
+  background: linear-gradient(135deg, rgba(0,212,255,0.05) 0%, rgba(123,94,167,0.05) 100%);
+  border: 1px solid rgba(0,212,255,0.2);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.winner-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.winner-trophy {
+  font-size: 2.5rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 10px rgba(255,200,0,0.5));
+}
+.winner-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 3px;
+}
+.winner-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--accent1);
+  letter-spacing: -0.02em;
+}
+.winner-score {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+.winner-rationale {
+  flex: 1;
+  min-width: 220px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  border-left: 1px solid var(--border-bright);
+  padding-left: 20px;
+}
+.rationale-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.rationale-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  flex-shrink: 0;
+}
+
+/* FOOTER */
+.app-footer {
+  text-align: center;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  line-height: 1.6;
+}
+
+/* MICRO ANIMATIONS */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.location-card { animation: fadeIn 0.3s ease both; }
+.location-card[data-idx="1"] { animation-delay: 0.05s; }
+.location-card[data-idx="2"] { animation-delay: 0.1s; }
+
+.score-bump {
+  animation: bump 0.2s ease;
+}
+@keyframes bump {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+  </style>
+</head>
+<body>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<div id="app">
+  <header class="app-header">
+    <div class="header-icon">⬡</div>
+    <div class="header-text">
+      <h1>Data Center Site Selection</h1>
+      <p>Scorecard &amp; Comparative Analysis Tool</p>
+    </div>
+  </header>
+
+  <div class="instructions">
+    <span class="inst-icon">ℹ</span>
+    Enter location names, adjust sliders to score each criterion, and compare weighted scores in real time.
+  </div>
+
+  <div class="locations-grid" id="locationsGrid">
+    <!-- Location cards injected by JS -->
+  </div>
+
+  <section class="chart-section">
+    <h2 class="section-title">Comparative Score Overview</h2>
+    <div class="chart-container" id="chartContainer">
+      <div class="chart-bars" id="chartBars"></div>
+      <div class="chart-legend" id="chartLegend"></div>
+    </div>
+  </section>
+
+  <section class="breakdown-section">
+    <h2 class="section-title">Criteria Breakdown</h2>
+    <div class="breakdown-table-wrap">
+      <table class="breakdown-table" id="breakdownTable">
+        <thead></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="winner-section" id="winnerSection">
+    <div class="winner-card" id="winnerCard">
+      <div class="winner-trophy">🏆</div>
+      <div class="winner-info">
+        <div class="winner-label">Recommended Site</div>
+        <div class="winner-name" id="winnerName">—</div>
+        <div class="winner-score" id="winnerScore"></div>
+      </div>
+    </div>
+    <div class="winner-rationale" id="winnerRationale"></div>
+  </section>
+
+  <footer class="app-footer">
+    Scores are weighted composites. Always validate with on-site due diligence and third-party assessments.
+  </footer>
+</div>
+
+<script>
+const CRITERIA = [
+  { key: 'power',     label: 'Power Availability',         weight: 0.20, inverted: false },
+  { key: 'fiber',     label: 'Fiber / Network Connectivity', weight: 0.15, inverted: false },
+  { key: 'water',     label: 'Water Access for Cooling',    weight: 0.10, inverted: false },
+  { key: 'land',      label: 'Land & Construction Cost',    weight: 0.15, inverted: false },
+  { key: 'tax',       label: 'Tax Incentives & Permitting', weight: 0.10, inverted: false },
+  { key: 'disaster',  label: 'Natural Disaster Risk',       weight: 0.15, inverted: true  },
+  { key: 'workforce', label: 'Workforce Availability',      weight: 0.10, inverted: false },
+  { key: 'climate',   label: 'Climate / PUE Efficiency',    weight: 0.05, inverted: false },
+];
+
+const COLORS = ['#00d4ff', '#7b5ea7', '#f97316'];
+const DEFAULTS = ['Austin, TX', 'Phoenix, AZ', 'Reno, NV'];
+
+const state = [
+  { name: DEFAULTS[0], scores: { power:7, fiber:7, water:6, land:6, tax:7, disaster:5, workforce:7, climate:7 } },
+  { name: DEFAULTS[1], scores: { power:8, fiber:6, water:4, land:7, tax:8, disaster:6, workforce:6, climate:8 } },
+  { name: DEFAULTS[2], scores: { power:7, fiber:5, water:5, land:8, tax:9, disaster:7, workforce:5, climate:7 } },
+];
+
+function effectiveScore(raw, inverted) {
+  return inverted ? (11 - raw) : raw;
+}
+
+function calcWeightedScore(loc) {
+  return CRITERIA.reduce((sum, c) => {
+    return sum + effectiveScore(loc.scores[c.key], c.inverted) * c.weight;
+  }, 0);
+}
+
+function fmt(n) { return n.toFixed(2); }
+
+function buildCards() {
+  const grid = document.getElementById('locationsGrid');
+  grid.innerHTML = '';
+  state.forEach((loc, idx) => {
+    const card = document.createElement('div');
+    card.className = 'location-card';
+    card.setAttribute('data-idx', idx);
+
+    let criteriaHTML = CRITERIA.map(c => {
+      const val = loc.scores[c.key];
+      const weightPct = Math.round(c.weight * 100);
+      return `
+        <div class="criterion-row">
+          <div class="criterion-header">
+            <span class="criterion-name">
+              ${c.label}
+              ${c.inverted ? '<span class="inverted-badge">INV</span>' : ''}
+            </span>
+            <span class="criterion-weight">${weightPct}%</span>
+          </div>
+          <div class="slider-row">
+            <input type="range" min="1" max="10" value="${val}"
+              data-loc="${idx}" data-key="${c.key}"
+              aria-label="${c.label}">
+            <span class="slider-val" id="val-${idx}-${c.key}">${val}</span>
+          </div>
+        </div>`;
+    }).join('');
+
+    const ws = calcWeightedScore(loc);
+    card.innerHTML = `
+      <div class="card-header">
+        <span class="card-num">Site ${idx + 1}</span>
+        <input type="text" class="location-name-input" value="${loc.name}"
+          placeholder="Enter location…" data-loc="${idx}" aria-label="Location name">
+      </div>
+      <div class="total-score-display">
+        <span class="score-label">Weighted Score</span>
+        <span class="score-value" id="wscore-${idx}">${fmt(ws)}</span>
+        <span class="score-max">/ 10</span>
+      </div>
+      <div class="criteria-list">${criteriaHTML}</div>`;
+
+    grid.appendChild(card);
+  });
+
+  // Slider events
+  grid.querySelectorAll('input[type=range]').forEach(slider => {
+    updateSliderBg(slider);
+    slider.addEventListener('input', e => {
+      const li = +e.target.dataset.loc;
+      const key = e.target.dataset.key;
+      const val = +e.target.value;
+      state[li].scores[key] = val;
+      document.getElementById(`val-${li}-${key}`).textContent = val;
+      updateSliderBg(e.target);
+      updateScoreDisplay(li);
+      updateChart();
+      updateBreakdown();
+      updateWinner();
+    });
+  });
+
+  // Name events
+  grid.querySelectorAll('.location-name-input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const li = +e.target.dataset.loc;
+      state[li].name = e.target.value || `Site ${li + 1}`;
+      updateChart();
+      updateBreakdown();
+      updateWinner();
+    });
+  });
+}
+
+function updateSliderBg(slider) {
+  const val = +slider.value;
+  const pct = ((val - 1) / 9) * 100;
+  const li = +slider.dataset.loc;
+  const color = COLORS[li];
+  slider.style.background = `linear-gradient(to right, ${color} ${pct}%, #252d3d ${pct}%)`;
+}
+
+function updateScoreDisplay(li) {
+  const ws = calcWeightedScore(state[li]);
+  const el = document.getElementById(`wscore-${li}`);
+  if (el) {
+    el.textContent = fmt(ws);
+    el.classList.remove('score-bump');
+    void el.offsetWidth;
+    el.classList.add('score-bump');
+  }
+}
+
+function updateChart() {
+  const barsEl = document.getElementById('chartBars');
+  const legendEl = document.getElementById('chartLegend');
+  if (!barsEl) return;
+
+  const scores = state.map(loc => calcWeightedScore(loc));
+  const maxScore = 10;
+
+  barsEl.innerHTML = state.map((loc, idx) => {
+    const pct = (scores[idx] / maxScore) * 100;
+    const name = loc.name || `Site ${idx + 1}`;
+    return `
+      <div class="chart-bar-row">
+        <div class="chart-bar-label" title="${name}">${name}</div>
+        <div class="chart-bar-track">
+          <div class="chart-bar-fill" style="width:${pct}%; background: ${COLORS[idx]};opacity:0.85">
+          </div>
+        </div>
+        <span style="min-width:42px;text-align:right;font-size:0.82rem;font-weight:700;color:${COLORS[idx]}">${fmt(scores[idx])}</span>
+      </div>`;
+  }).join('');
+
+  legendEl.innerHTML = state.map((loc, idx) => {
+    const name = loc.name || `Site ${idx + 1}`;
+    return `<div class="legend-item"><div class="legend-dot" style="background:${COLORS[idx]}"></div>${name}</div>`;
+  }).join('');
+}
+
+function updateBreakdown() {
+  const table = document.getElementById('breakdownTable');
+  if (!table) return;
+
+  const scores = state.map(loc => calcWeightedScore(loc));
+  const names = state.map((loc, i) => loc.name || `Site ${i + 1}`);
+
+  // Header
+  table.querySelector('thead').innerHTML = `
+    <tr>
+      <th>Criterion</th>
+      <th>Weight</th>
+      ${names.map((n, i) => `<th class="score-th" style="color:${COLORS[i]}">${n}</th>`).join('')}
+    </tr>`;
+
+  // Body
+  let rowsHTML = CRITERIA.map(c => {
+    const rawVals = state.map(loc => loc.scores[c.key]);
+    const effVals = rawVals.map(v => effectiveScore(v, c.inverted));
+    const weighted = effVals.map(v => (v * c.weight));
+    const maxEff = Math.max(...effVals);
+
+    const cells = state.map((loc, i) => {
+      const eff = effVals[i];
+      const raw = rawVals[i];
+      const isBest = eff === maxEff;
+      const style = isBest
+        ? `background:rgba(34,197,94,0.1);color:#22c55e;`
+        : `color:${COLORS[i]};`;
+      const displayVal = c.inverted ? `${raw} → ${eff}` : `${raw}`;
+      return `<td class="score-cell" style="${style}">${displayVal}</td>`;
+    }).join('');
+
+    return `<tr>
+      <td class="criterion-col">${c.label}${c.inverted ? ' <span style="font-size:0.68rem;color:#f97316">(INV)</span>' : ''}</td>
+      <td class="weight-col">${Math.round(c.weight * 100)}%</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  // Total row
+  const totalCells = scores.map((s, i) => {
+    const isWinner = s === Math.max(...scores);
+    const style = isWinner ? `color:#22c55e` : `color:${COLORS[i]}`;
+    return `<td class="score-cell" style="${style}">${fmt(s)}</td>`;
+  }).join('');
+
+  rowsHTML += `<tr class="total-row">
+    <td>TOTAL</td>
+    <td>100%</td>
+    ${totalCells}
+  </tr>`;
+
+  table.querySelector('tbody').innerHTML = rowsHTML;
+}
+
+function updateWinner() {
+  const scores = state.map(loc => calcWeightedScore(loc));
+  const maxScore = Math.max(...scores);
+  const winIdx = scores.indexOf(maxScore);
+  const winLoc = state[winIdx];
+  const winName = winLoc.name || `Site ${winIdx + 1}`;
+
+  const nameEl = document.getElementById('winnerName');
+  const scoreEl = document.getElementById('winnerScore');
+  const rationaleEl = document.getElementById('winnerRationale');
+  const winnerSection = document.getElementById('winnerSection');
+
+  if (nameEl) {
+    nameEl.textContent = winName;
+    nameEl.style.color = COLORS[winIdx];
+  }
+  if (scoreEl) {
+    const delta = scores[winIdx] - scores.filter((_, i) => i !== winIdx).reduce((a, b) => Math.max(a, b), 0);
+    scoreEl.textContent = `Score: ${fmt(maxScore)} / 10  (+${fmt(delta)} ahead of next best)`;
+  }
+
+  // Rationale: top criteria for winner
+  if (rationaleEl) {
+    const topCriteria = CRITERIA
+      .map(c => ({
+        label: c.label,
+        contribution: effectiveScore(winLoc.scores[c.key], c.inverted) * c.weight
+      }))
+      .sort((a, b) => b.contribution - a.contribution)
+      .slice(0, 3);
+
+    rationaleEl.innerHTML = `
+      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.08em;color:#4a5568;font-weight:600;margin-bottom:8px;">Top contributing factors</div>
+      ${topCriteria.map(c => `
+        <div class="rationale-row">
+          <div class="rationale-dot"></div>
+          <span><strong style="color:#e2e8f0">${c.label}</strong> — contributes ${fmt(c.contribution)} pts</span>
+        </div>`).join('')}
+    `;
+  }
+
+  if (winnerSection) {
+    winnerSection.style.borderColor = `rgba(${hexToRgb(COLORS[winIdx])},0.35)`;
+  }
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+
+function init() {
+  buildCards();
+  updateChart();
+  updateBreakdown();
+  updateWinner();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
